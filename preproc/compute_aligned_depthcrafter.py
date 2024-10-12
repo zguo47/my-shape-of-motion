@@ -94,15 +94,9 @@ def align_monodepth_with_metric_depth(
     print(
         f"Aligning monodepth from {monodepth_npz_path} with metric depth in {metric_depth_dir}"
     )
-    import numpy as np
-    import cv2
-    import os
-    import os.path as osp
-    from glob import glob
-    from tqdm import tqdm
 
     monodepth_data = np.load(monodepth_npz_path)
-    mono_depth_array = monodepth_data['depth']  # Shape: (80, 250, 512)
+    mono_depth_array = monodepth_data['depth']  # Shape: (N, 250, 512)
 
     new_height = 480
     new_width = 854
@@ -115,41 +109,51 @@ def align_monodepth_with_metric_depth(
             interpolation=cv2.INTER_LINEAR
         )
         resized_depth_maps.append(resized_map)
-    mono_depth_array_resized = np.array(resized_depth_maps)  # Shape: (80, 480, 854)
+    mono_depth_array_resized = np.array(resized_depth_maps)  # Shape: (N, 480, 854)
 
     metric_paths = sorted(glob(f"{metric_depth_dir}/{matching_pattern}"))
     img_files = [osp.basename(p) for p in metric_paths]
     img_files.sort()
 
     os.makedirs(output_monodepth_dir, exist_ok=True)
-    if len(os.listdir(output_monodepth_dir)) == len(img_files):
-        print(f"Found {len(img_files)} files in {output_monodepth_dir}, skipping")
-        return
+    # if len(os.listdir(output_monodepth_dir)) == len(img_files):
+    #     print(f"Found {len(img_files)} files in {output_monodepth_dir}, skipping")
+    #     return
 
     if len(img_files) != mono_depth_array_resized.shape[0]:
         raise ValueError(
             "Number of images does not match the number of depth maps in the monodepth npz file."
         )
 
-    for idx, f in enumerate(tqdm(img_files)):
-        imname = osp.splitext(f)[0]
-        metric_path = osp.join(metric_depth_dir, imname + ".npy")
+    frame_idx = 0  # Using frame 0
 
+    imname = osp.splitext(img_files[frame_idx])[0]
+    metric_path = osp.join(metric_depth_dir, imname + ".npy")
+
+    mono_disp_map = mono_depth_array_resized[frame_idx]
+    mono_disp_map = mono_disp_map / UINT16_MAX  
+
+    metric_disp_map = np.load(metric_path)
+    ms_colmap_disp = metric_disp_map - np.median(metric_disp_map) + 1e-8
+    ms_mono_disp = mono_disp_map - np.median(mono_disp_map) + 1e-8
+
+    scale = np.median(ms_colmap_disp / ms_mono_disp)
+    shift = np.median(metric_disp_map - scale * mono_disp_map)
+
+    print(f"Global scale (from frame 0): {scale}")
+    print(f"Global shift (from frame 0): {shift}")
+
+    for idx, f in enumerate(tqdm(img_files, desc="Applying global scale and shift")):
+        imname = osp.splitext(f)[0]
         mono_disp_map = mono_depth_array_resized[idx]
         mono_disp_map = mono_disp_map / UINT16_MAX  
 
-        metric_disp_map = np.load(metric_path)
-        ms_colmap_disp = metric_disp_map - np.median(metric_disp_map) + 1e-8
-        ms_mono_disp = mono_disp_map - np.median(mono_disp_map) + 1e-8
-
-        scale = np.median(ms_colmap_disp / ms_mono_disp)
-        shift = np.median(metric_disp_map - scale * mono_disp_map)
-
         aligned_disp = scale * mono_disp_map + shift
 
-        min_thre = min(1e-6, np.quantile(aligned_disp, 0.01))
         # Set depth values that are too small to invalid (0)
+        min_thre = min(1e-6, np.quantile(aligned_disp, 0.01))
         aligned_disp[aligned_disp < min_thre] = 0.0
+
         out_file = osp.join(output_monodepth_dir, imname + ".npy")
         np.save(out_file, aligned_disp)
 
@@ -238,7 +242,7 @@ def main():
     align_monodepth_with_metric_depth(
     metric_depth_dir="/fs/nexus-projects/video-depth-pose/videosfm/shape-of-motion/davis/unidepth_disp/480p/hike",
     monodepth_npz_path="/fs/nexus-projects/video-depth-pose/videosfm/shape-of-motion/davis/depthcrafter/hike/hike30.npz",
-    output_monodepth_dir="/fs/nexus-projects/video-depth-pose/videosfm/shape-of-motion/davis/aligned_depthcrafter/hike",
+    output_monodepth_dir="/fs/nexus-projects/video-depth-pose/videosfm/shape-of-motion/davis/aligned_depthcrafter/480p/hike",
     matching_pattern="*.npy"
 )
 

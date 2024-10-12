@@ -8,7 +8,7 @@ def main(
     img_dirs: list[str],
     gpus: list[int],
     img_name: str = "images",
-    depth_method: str = "aligned_depth_anything",
+    depth_method: str = "aligned_depthcrafter/480p",
     intrins_method: str = "unidepth_intrins",
     out_name: str = "droid_recon",
 ):
