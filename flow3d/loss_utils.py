@@ -155,3 +155,4 @@ def compute_accel_loss(transls):
     accel = 2 * transls[:, 1:-1] - transls[:, :-2] - transls[:, 2:]
     loss = accel.norm(dim=-1).mean()
     return loss
+

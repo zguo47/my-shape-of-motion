@@ -8,6 +8,9 @@ work_dirs/
 .envrc
 .bak/
 datasets/
+outdir/
+davis/
 
 preproc/checkpoints
 preproc/checkpoints/
+preproc/pytorch_scatter/

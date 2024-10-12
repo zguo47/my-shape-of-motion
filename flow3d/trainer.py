@@ -41,6 +41,7 @@ class Trainer:
         validate_video_every: int = 1000,
         validate_viewer_assets_every: int = 100,
     ):
+
         self.device = device
         self.log_every = log_every
         self.checkpoint_every = checkpoint_every

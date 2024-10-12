@@ -8,7 +8,7 @@ def main(
     img_dirs: list[str],
     gpus: list[int],
     img_name: str = "images",
-    mask_name: str = "masks",
+    mask_name: str = "Annotations/480p",
     model_type: str = "bootstapir",
     use_torch: bool = True,
 ):

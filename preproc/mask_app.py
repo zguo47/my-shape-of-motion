@@ -392,6 +392,7 @@ def make_demo(
             return slider, message
 
         def get_select_coords(img, evt: gr.SelectData):
+            print("get_select_coords called")
             i = evt.index[1]  # type: ignore
             j = evt.index[0]  # type: ignore
             index_mask = prompts.add_point(img, i, j)
@@ -474,6 +475,7 @@ def make_demo(
         )
 
         frame_index.change(prompts.set_input_image, [frame_index], [input_image])
+        print("Binding select event to input_image")
         input_image.select(get_select_coords, [input_image], [output_img])
 
         sam_button.click(prompts.get_sam_features, outputs=[instruction, input_image])
@@ -514,4 +516,4 @@ if __name__ == "__main__":
         args.vid_name,
         args.img_name,
     )
-    demo.launch(server_port=args.port)
+    demo.launch(server_port=args.port, share=True)

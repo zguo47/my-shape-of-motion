@@ -41,7 +41,8 @@ class DavisDataConfig:
         "depth_anything",
         "depth_anything_v2",
         "unidepth_disp",
-    ] = "aligned_depth_anything"
+        "aligned_depthcrafter",
+    ] = "aligned_depthcrafter"
     camera_type: Literal["droid_recon"] = "droid_recon"
     track_2d_type: Literal["bootstapir", "tapir"] = "bootstapir"
     mask_erosion_radius: int = 3
@@ -90,7 +91,8 @@ class CasualDataset(BaseDataset):
             "depth_anything",
             "depth_anything_v2",
             "unidepth_disp",
-        ] = "aligned_depth_anything",
+            "aligned_depthcrafter",
+        ] = "aligned_depthcrafter",
         camera_type: Literal["droid_recon"] = "droid_recon",
         track_2d_type: Literal["bootstapir", "tapir"] = "bootstapir",
         mask_erosion_radius: int = 3,
